@@ -2,7 +2,6 @@ package service;
 
 import domain.bmp.BmpHandler;
 import domain.bmp.BmpImage;
-import domain.payload.ExtractedFile;
 import domain.payload.PayloadHandler;
 import domain.steganography.SteganographyStrategy;
 import exception.StegoException;

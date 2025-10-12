@@ -34,9 +34,9 @@ public class PayloadHandler {
     }
 
     // Camino Inverso: Parsea el payload extraído del archivo portador para recuperar el archivo original.
-    public ExtractedFile parsePayload(byte[] extractedPayload, Optional<CryptoHandler> cryptoHandler) {
-       // implementar
-    }
+//    public ExtractedFile parsePayload(byte[] extractedPayload, Optional<CryptoHandler> cryptoHandler) {
+//       // implementar
+//    }
 
 
     // --- MÉTODOS PRIVADOS ---
