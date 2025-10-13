@@ -40,7 +40,7 @@ public class StegoBmp {
         if (cliConfig.cryptoAlgorithm().isPresent()) {
             cryptoConfig = Optional.of(new CryptoConfig(
                     cliConfig.cryptoAlgorithm().get(),
-                    cliConfig.cryptoMode().get(),
+                    cliConfig.cryptoMode().get(), //TODO: why?
                     cliConfig.password().get()
             ));
         }

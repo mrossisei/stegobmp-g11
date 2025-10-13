@@ -1,6 +1,18 @@
 package com.stegobmp.domain.steganography;
 
+import com.stegobmp.domain.crypto.CryptoHandler;
+
 public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
+    private final CryptoHandler cryptoHandler;
+
+    public SteganographyStrategyLSB1() {
+        this.cryptoHandler = null;
+    }
+
+    public SteganographyStrategyLSB1(CryptoHandler cryptoHandler) {
+        this.cryptoHandler = cryptoHandler;
+    }
+
     @Override
     public byte[] embed(byte[] carrierPixelData, byte[] payload) {
         if (payload.length > getCapacity(carrierPixelData)) {
@@ -29,60 +41,86 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         return b;
     }
 
-    @Override
-    public byte[] extract(byte[] carrierPixelData, boolean isEncrypted) {
+    private byte[] extractPayloadSizeInfo(byte[] carrierPixel) {
         byte[] payloadSizeInfo = new byte[4]; // Los primeros 4 bytes almacenan el largo del payload
-        int carrierBitIndex = 0; // índice en bits, no en bytes
+        int carrierBitIndex = 0;
 
         // ---- Extraer los 4 bytes que contienen el tamaño del payload ----
         for (int i = 0; i < 4; i++) {
-            byte b = extractByte(carrierPixelData, carrierBitIndex);
+            byte b = extractByte(carrierPixel, carrierBitIndex);
             payloadSizeInfo[i] = b;
             carrierBitIndex += 8; // Avanza 8 bits por byte
         }
+        return payloadSizeInfo;
+    }
 
-        // Convertir Big Endian 4 bytes a int
-        int payloadLength = ((payloadSizeInfo[0] & 0xFF) << 24) |
+    private int convertPayloadLength(byte[] payloadSizeInfo) {
+        return ((payloadSizeInfo[0] & 0xFF) << 24) |
                 ((payloadSizeInfo[1] & 0xFF) << 16) |
                 ((payloadSizeInfo[2] & 0xFF) << 8)  |
                 (payloadSizeInfo[3] & 0xFF);
+    }
 
-
-        // ---- Extraer el payload ----
+    private byte[] extractPayload(byte[] carrierPixelData, int payloadLength, int startBitIndex) {
         byte[] extractedPayload = new byte[payloadLength];
 
         for (int i = 0; i < payloadLength; i++) {
-            byte b = extractByte(carrierPixelData, carrierBitIndex);
+            byte b = extractByte(carrierPixelData, startBitIndex);
             extractedPayload[i] = b;
-            carrierBitIndex += 8; // Avanza 8 bits por byte
+            startBitIndex += 8; // Avanza 8 bits por byte
+        }
+        return extractedPayload;
+    }
+
+    private byte[] extractDecryptedPayload(byte[] extractedPayload) {
+        byte[] decryptedPayload = new byte[extractedPayload.length - 5]; //5 because '\0'
+        System.arraycopy(extractedPayload, 4, decryptedPayload, 0, extractedPayload.length - 5);
+        return decryptedPayload;
+    }
+
+    @Override
+    public byte[] extract(byte[] carrierPixelData) {
+        byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
+        int carrierBitIndex = 32; // header bits
+
+        // Convertir Big Endian 4 bytes a int
+        int payloadLength = convertPayloadLength(payloadSizeInfo);
+
+        // ---- Extraer el payload ----
+        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength, carrierBitIndex);
+
+        if (this.cryptoHandler != null) {
+            extractedPayload = this.cryptoHandler.decrypt(extractedPayload);
+            return extractDecryptedPayload(extractedPayload);
         }
 
-        // ---- Si no está encriptado, continuar leyendo hasta encontrar '\0' ----
-        if (!isEncrypted) {
-            byte[] extensionPayload = new byte[16];
-            int extIndex = 0;
 
-            while (true) {
-                byte b = extractByte(carrierPixelData, carrierBitIndex);
-                carrierBitIndex += 8; // Avanza también aquí
-                if (extIndex == extensionPayload.length) {
-                    // Ampliar el buffer si es necesario
-                    byte[] newExtensionPayload = new byte[extensionPayload.length * 2];
-                    System.arraycopy(extensionPayload, 0, newExtensionPayload, 0, extensionPayload.length);
-                    extensionPayload = newExtensionPayload;
-                }
-                if (b == '\0') {
-                    break;
-                }
-                extensionPayload[extIndex++] = b;
+        carrierBitIndex += payloadLength * 8; // Mover el índice después del payload extraído
+
+        byte[] extensionPayload = new byte[16];
+        int extIndex = 0;
+
+        while (carrierPixelData.length > carrierBitIndex) {
+            byte b = extractByte(carrierPixelData, carrierBitIndex);
+            carrierBitIndex += 8; // Avanza también aquí
+            if (extIndex == extensionPayload.length) {
+                // Ampliar el buffer si es necesario
+                byte[] newExtensionPayload = new byte[extensionPayload.length * 2];
+                System.arraycopy(extensionPayload, 0, newExtensionPayload, 0, extensionPayload.length);
+                extensionPayload = newExtensionPayload;
             }
-
-
-            byte[] finalPayload = new byte[payloadLength + extIndex];
-            System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
-            System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extIndex);
-            extractedPayload = finalPayload;
+            if (b == '\0') {
+                break;
+            }
+            extensionPayload[extIndex++] = b;
         }
+
+
+        byte[] finalPayload = new byte[payloadLength + extIndex];
+        System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
+        System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extIndex);
+        extractedPayload = finalPayload;
+
 
         return extractedPayload;
     }

@@ -23,7 +23,7 @@ public class SteganographyStrategyLSB4 implements  SteganographyStrategy {
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData, boolean isEncrypted) {
+    public byte[] extract(byte[] carrierPixelData) {
         byte[] payloadSizeInfo = new byte[4]; // The first 4 bytes store the payload length
         int carrierByteIndex = 0;
         for (int i = 0; i < 4; i++) {
@@ -46,25 +46,23 @@ public class SteganographyStrategyLSB4 implements  SteganographyStrategy {
             carrierByteIndex += 2; // Move 2 bytes for each byte extracted
         }
 
-        if (!isEncrypted) {
-            // Extract extension
-            ByteArrayOutputStream extStream = new ByteArrayOutputStream();
-            while (true) {
-                byte b = extractByte(carrierPixelData, carrierByteIndex);
-                carrierByteIndex += 2;
-                extStream.write(b);
-                if (b == 0) break;
-            }
-            byte[] extensionPayload = extStream.toByteArray();
-            int extLen = extensionPayload.length;
-            if (extLen > 0 && extensionPayload[extLen - 1] == 0) {
-                extLen--; // Remove null terminator from length, it will blow up when writing to file otherwise
-            }
-            byte[] finalPayload = new byte[payloadLength + extLen];
-            System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
-            System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extLen);
-            extractedPayload = finalPayload;
+        // Extract extension
+        ByteArrayOutputStream extStream = new ByteArrayOutputStream();
+        while (true) {
+            byte b = extractByte(carrierPixelData, carrierByteIndex);
+            carrierByteIndex += 2;
+            extStream.write(b);
+            if (b == 0) break;
         }
+        byte[] extensionPayload = extStream.toByteArray();
+        int extLen = extensionPayload.length;
+        if (extLen > 0 && extensionPayload[extLen - 1] == 0) {
+            extLen--; // Remove null terminator from length, it will blow up when writing to file otherwise
+        }
+        byte[] finalPayload = new byte[payloadLength + extLen];
+        System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
+        System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extLen);
+        extractedPayload = finalPayload;
 
         return extractedPayload;
     }

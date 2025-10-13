@@ -2,12 +2,15 @@ package com.stegobmp.service;
 
 import com.stegobmp.domain.bmp.BmpHandler;
 import com.stegobmp.domain.bmp.BmpImage;
+import com.stegobmp.domain.crypto.CryptoConfig;
+import com.stegobmp.domain.crypto.CryptoHandler;
 import com.stegobmp.domain.payload.PayloadHandler;
 import com.stegobmp.domain.steganography.SteganographyFactory;
 import com.stegobmp.domain.steganography.SteganographyStrategy;
 import com.stegobmp.exception.StegoException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -30,11 +33,10 @@ public class StegoBmpService {
     public byte[] embed() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
 
-        // TODO: Instanciar el CryptoHandler opcional basado en la configuración.
-        // Optional<CryptoHandler> cryptoHandler = CryptoFactory.create(config...);
-        byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), Optional.empty());
+        Optional<CryptoHandler> cryptoHandler = config.cryptoConfig().map(CryptoHandler::new);
+        byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), cryptoHandler);
 
-        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
+        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
 
         if (strategy.getCapacity(carrierImage.pixelData()) < payloadToEmbed.length) {
             throw new StegoException("El archivo portador no tiene suficiente capacidad para ocultar los datos.");
@@ -50,8 +52,8 @@ public class StegoBmpService {
      */
     public byte[] extract() {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
-        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
-        byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isPresent());
+        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
+        byte[] extractedPayload = strategy.extract(carrierImage.pixelData());
         ExtractedData extractedData = payloadHandler.extractFileExtension(extractedPayload);
         setLastExtractedFileExtension(extractedData.extension);
         return extractedData.payload;

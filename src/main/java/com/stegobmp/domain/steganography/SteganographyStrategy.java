@@ -21,7 +21,7 @@ public interface SteganographyStrategy {
      * @param carrierPixelData El array de bytes del cuerpo de la imagen portadora.
      * @return El array de bytes del payload oculto.
      */
-    byte[] extract(byte[] carrierPixelData, boolean isEncrypted);
+    byte[] extract(byte[] carrierPixelData);
 
     /**
      * Calcula la capacidad máxima de ocultamiento en bytes para un portador dado.
