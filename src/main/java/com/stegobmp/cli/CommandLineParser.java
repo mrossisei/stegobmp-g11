@@ -1,6 +1,9 @@
-package cli;
+package com.stegobmp.cli;
 
-import exception.StegoException;
+import com.stegobmp.domain.crypto.CryptoAlgorithm;
+import com.stegobmp.domain.crypto.CryptoMode;
+import com.stegobmp.domain.steganography.StegAlgorithm;
+import com.stegobmp.exception.StegoException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +17,7 @@ import java.util.Optional;
 public class CommandLineParser {
 
     //Parsea el array de argumentos y devuelve un objeto de configuración.
-    public static CliConfig parse(String[] args) {
+    public static CliConfig parse(String[] args) throws StegoException {
         if (args.length == 0) {
             throw new StegoException("No se proporcionaron argumentos. Uso: stegobmp -embed | -extract ...");
         }
@@ -78,7 +81,7 @@ public class CommandLineParser {
         );
     }
 
-    private static OperationMode parseOperationMode(Map<String, String> argMap) {
+    private static OperationMode parseOperationMode(Map<String, String> argMap) throws StegoException {
         boolean hasEmbed = argMap.containsKey("-embed");
         boolean hasExtract = argMap.containsKey("-extract");
 
@@ -91,7 +94,7 @@ public class CommandLineParser {
         return hasEmbed ? OperationMode.EMBED : OperationMode.EXTRACT;
     }
 
-    private static String getRequiredArg(Map<String, String> argMap, String key) {
+    private static String getRequiredArg(Map<String, String> argMap, String key) throws StegoException {
         String value = argMap.get(key);
         if (value == null) {
             throw new StegoException("Falta el parámetro obligatorio: " + key);

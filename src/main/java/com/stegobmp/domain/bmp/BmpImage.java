@@ -1,4 +1,4 @@
-package com.tudai.stegobmp.domain.bmp;
+package com.stegobmp.domain.bmp;
 
 import java.util.Arrays;
 

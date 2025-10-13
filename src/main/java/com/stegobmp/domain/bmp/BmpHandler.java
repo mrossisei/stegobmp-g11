@@ -1,6 +1,6 @@
-package com.tudai.stegobmp.domain.bmp;
+package com.stegobmp.domain.bmp;
 
-import com.tudai.stegobmp.exception.StegoException;
+import com.stegobmp.exception.StegoException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

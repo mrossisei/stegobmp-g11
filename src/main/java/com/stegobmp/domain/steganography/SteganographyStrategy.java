@@ -1,4 +1,4 @@
-package domain.steganography;
+package com.stegobmp.domain.steganography;
 
 /**
  * Interfaz para el patrón Strategy. Define el contrato que todos

@@ -1,4 +1,4 @@
-package exception;
+package com.stegobmp.exception;
 
 /**
  * Excepción personalizada para errores relacionados con esteganografía.
@@ -7,7 +7,7 @@ package exception;
  * - Formato de archivo BMP inválido
  * - Errores en encriptación/desencriptación
  */
-public class StegoException extends Exception {
+public class StegoException extends RuntimeException {
 
     public StegoException(String message) {
         super(message);

@@ -1,8 +1,7 @@
-package service;
+package com.stegobmp.service;
 
-import cli.StegAlgorithm;
-import cli.CryptoAlgorithm;
-import cli.CryptoMode;
+import com.stegobmp.domain.steganography.StegAlgorithm;
+import com.stegobmp.domain.crypto.CryptoConfig;
 
 import java.util.Optional;
 
@@ -16,7 +15,5 @@ public record ServiceConfig(
     byte[] secretData, // Puede ser null para la operación de extracción
     String inputFileName, // Necesario para obtener la extensión
     StegAlgorithm stegAlgorithm,
-    Optional<CryptoAlgorithm> cryptoAlgorithm,
-    Optional<CryptoMode> cryptoMode,
-    Optional<String> password
+    Optional<CryptoConfig> cryptoConfig
 ) {}

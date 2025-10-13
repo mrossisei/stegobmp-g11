@@ -1,10 +1,14 @@
-package service;
+package com.stegobmp.service;
 
-import domain.bmp.BmpHandler;
-import domain.bmp.BmpImage;
-import domain.payload.PayloadHandler;
-import domain.steganography.SteganographyStrategy;
-import exception.StegoException;
+import com.stegobmp.domain.bmp.BmpHandler;
+import com.stegobmp.domain.bmp.BmpImage;
+import com.stegobmp.domain.payload.PayloadHandler;
+import com.stegobmp.domain.steganography.SteganographyFactory;
+import com.stegobmp.domain.steganography.SteganographyStrategy;
+import com.stegobmp.exception.StegoException;
+
+import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Orquestador principal de la aplicación.
@@ -14,19 +18,21 @@ public class StegoBmpService {
 
     private final BmpHandler bmpHandler;
     private final PayloadHandler payloadHandler;
+    private final ServiceConfig config;
 
-    public StegoBmpService() {
+    public StegoBmpService(ServiceConfig serviceConfig) {
         this.bmpHandler = new BmpHandler();
         this.payloadHandler = new PayloadHandler();
+        this.config = serviceConfig;
     }
 
     //Proceso de ocultar información.
-    public byte[] embed(ProcessConfig config) {
+    public byte[] embed() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
 
         // TODO: Instanciar el CryptoHandler opcional basado en la configuración.
         // Optional<CryptoHandler> cryptoHandler = CryptoFactory.create(config...);
-        byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), /* cryptoHandler */);
+        byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), Optional.empty());
 
         SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
 
@@ -42,8 +48,10 @@ public class StegoBmpService {
     /**
      * Orquesta el proceso de extraer información.
      */
-    public byte[] extract(ProcessConfig config) {
+    public byte[] extract() {
         // implementar camino inverso
+        return null;
     }
+
 
 }

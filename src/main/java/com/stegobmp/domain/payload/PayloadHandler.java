@@ -1,7 +1,7 @@
-package com.tudai.stegobmp.domain.payload;
+package com.stegobmp.domain.payload;
 
-import com.tudai.stegobmp.domain.crypto.CryptoHandler;
-import com.tudai.stegobmp.exception.StegoException;
+import com.stegobmp.domain.crypto.CryptoConfig;
+import com.stegobmp.domain.crypto.CryptoHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class PayloadHandler {
     // Prepara el payload final que será ocultado: Construye la estructura de datos, la cifra si es necesario, y añade los metadatos de tamaño.
     // plaintext = [Tamaño real (4 bytes)] || [Datos del archivo] || [Extensión (con '.' y '\0')]
     // (opcional) cifrado = [Tamaño del cifrado (4 bytes)] || [cifrado(plaintext)]
-    public byte[] preparePayload(byte[] secretFileData, String fileName, Optional<CryptoHandler> cryptoHandler) {
+    public byte[] preparePayload(byte[] secretFileData, String fileName, Optional<CryptoHandler> cryptoHandler) throws IOException {
         byte[] plaintextPayload = buildPlaintextPayload(secretFileData, fileName);
 
         if (cryptoHandler.isPresent()) {

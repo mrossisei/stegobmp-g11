@@ -1,10 +1,10 @@
-package cli;
+package com.stegobmp.domain.crypto;
 
 public enum CryptoAlgorithm {
     AES128,
     AES192,
     AES256,
-    DES3
+    DES3;
 
     public static CryptoAlgorithm fromString(String text) {
         if ("3des".equalsIgnoreCase(text)) {
@@ -13,7 +13,7 @@ public enum CryptoAlgorithm {
         try {
             return CryptoAlgorithm.valueOf(text.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new StegoException("Algoritmo de cifrado no válido: '" + text + "'. Use aes128, aes192, aes256 o 3des.");
+            return null;
         }
     }
 }
