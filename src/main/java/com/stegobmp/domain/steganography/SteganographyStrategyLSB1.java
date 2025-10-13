@@ -86,7 +86,7 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
+    public byte[] extract(byte[] carrierPixelData, boolean withExtension) {
         byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
         int carrierBitIndex = 0; // header bits
 
@@ -95,7 +95,7 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
 
         byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength);
 
-        if (!hasExtension) {
+        if (!withExtension) {
             return extractedPayload;
         }
 

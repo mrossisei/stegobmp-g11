@@ -2,12 +2,14 @@ package com.stegobmp.domain.payload;
 
 import com.stegobmp.domain.crypto.CryptoConfig;
 import com.stegobmp.domain.crypto.CryptoHandler;
+import com.stegobmp.exception.StegoException;
 import com.stegobmp.service.StegoBmpService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -23,21 +25,51 @@ public class PayloadHandler {
     // Prepara el payload final que será ocultado: Construye la estructura de datos, la cifra si es necesario, y añade los metadatos de tamaño.
     // plaintext = [Tamaño real (4 bytes)] || [Datos del archivo] || [Extensión (con '.' y '\0')]
     // (opcional) cifrado = [Tamaño del cifrado (4 bytes)] || [cifrado(plaintext)]
-    public byte[] preparePayload(byte[] secretFileData, String fileName, Optional<CryptoHandler> cryptoHandler) throws IOException {
+    public byte[] preparePayload(byte[] secretFileData, String fileName, CryptoHandler cryptoHandler) throws IOException {
         byte[] plaintextPayload = buildPlaintextPayload(secretFileData, fileName);
 
-        if (cryptoHandler.isPresent()) {
-            byte[] encryptedData = cryptoHandler.get().encrypt(plaintextPayload);
+        if (cryptoHandler != null) {
+            byte[] encryptedData = cryptoHandler.encrypt(plaintextPayload);
             return buildFinalEncryptedPayload(encryptedData);
         } else {
             return plaintextPayload;
         }
     }
 
-    // Camino Inverso: Parsea el payload extraído del archivo portador para recuperar el archivo original.
-//    public ExtractedFile parsePayload(byte[] extractedPayload, Optional<CryptoHandler> cryptoHandler) {
-//       // implementar
-//    }
+    // | size | data | ext |
+    // | size | ciph(size, data, ext)
+    public ExtractedFile parsePayload(byte[] payload, CryptoHandler cryptoHandler) throws IOException {
+        if(cryptoHandler == null){
+            return parsePlaintextPayload(payload);
+        }
+        byte[] encryptedPayload = new byte[payload.length - 4];
+        System.arraycopy(payload, 4, encryptedPayload, 0, payload.length - 4);
+        byte[] decryptedPayload = cryptoHandler.decrypt(encryptedPayload);
+        return parsePlaintextPayload(decryptedPayload);
+
+    }
+
+
+    private ExtractedFile parsePlaintextPayload(byte[] plaintextPayload) {
+        byte[] sizeInBytes = Arrays.copyOfRange(plaintextPayload, 0, SIZE_BYTES);
+        int size = convertPayloadLength(sizeInBytes);
+
+        byte[] data = Arrays.copyOfRange(plaintextPayload, SIZE_BYTES, SIZE_BYTES + size);
+
+        byte[] extensionBytes = Arrays.copyOfRange(plaintextPayload, SIZE_BYTES + size, plaintextPayload.length);
+
+        return new ExtractedFile(data, new String(extensionBytes, StandardCharsets.UTF_8));
+    }
+
+
+    private int convertPayloadLength(byte[] payloadSizeInfo) {
+        return ((payloadSizeInfo[0] & 0xFF) << 24) |
+                ((payloadSizeInfo[1] & 0xFF) << 16) |
+                ((payloadSizeInfo[2] & 0xFF) << 8)  |
+                (payloadSizeInfo[3] & 0xFF);
+    }
+
+
 
 
     // --- MÉTODOS PRIVADOS ---

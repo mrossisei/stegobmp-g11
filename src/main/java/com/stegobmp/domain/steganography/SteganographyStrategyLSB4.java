@@ -23,7 +23,7 @@ public class SteganographyStrategyLSB4 implements  SteganographyStrategy {
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData) {
+    public byte[] extract(byte[] carrierPixelData, boolean withExtension) {
         byte[] payloadSizeInfo = new byte[4]; // The first 4 bytes store the payload length
         int carrierByteIndex = 0;
         for (int i = 0; i < 4; i++) {

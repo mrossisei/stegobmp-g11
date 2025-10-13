@@ -7,7 +7,7 @@ public class SteganographyStrategyLSBI implements  SteganographyStrategy {
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData) {
+    public byte[] extract(byte[] carrierPixelData, boolean withExtension) {
         return new byte[0];
     }
 

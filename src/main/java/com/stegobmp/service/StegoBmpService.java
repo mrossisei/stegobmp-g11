@@ -4,6 +4,7 @@ import com.stegobmp.domain.bmp.BmpHandler;
 import com.stegobmp.domain.bmp.BmpImage;
 import com.stegobmp.domain.crypto.CryptoConfig;
 import com.stegobmp.domain.crypto.CryptoHandler;
+import com.stegobmp.domain.payload.ExtractedFile;
 import com.stegobmp.domain.payload.PayloadHandler;
 import com.stegobmp.domain.steganography.SteganographyFactory;
 import com.stegobmp.domain.steganography.SteganographyStrategy;
@@ -22,18 +23,20 @@ public class StegoBmpService {
     private final BmpHandler bmpHandler;
     private final PayloadHandler payloadHandler;
     private final ServiceConfig config;
+    private final CryptoHandler cryptoHandler;
     private String lastExtractedFileExtension = "";
     public StegoBmpService(ServiceConfig serviceConfig) {
         this.bmpHandler = new BmpHandler();
         this.payloadHandler = new PayloadHandler();
         this.config = serviceConfig;
+        this.cryptoHandler = config.cryptoConfig().map(CryptoHandler::new).orElse(null);
+
     }
 
     //Proceso de ocultar información.
     public byte[] embed() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
 
-        Optional<CryptoHandler> cryptoHandler = config.cryptoConfig().map(CryptoHandler::new);
         byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), cryptoHandler);
 
         SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
@@ -47,13 +50,13 @@ public class StegoBmpService {
         return bmpHandler.writeBmpToBytes(outputImage);
     }
 
-    /**
-     * Orquesta el proceso de extraer información.
-     */
-    public byte[] extract() {
+    public byte[] extract() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
         SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
-        byte[] extractedPayload = strategy.extract(carrierImage.pixelData());
+        byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isEmpty());
+
+        ExtractedFile extractedFile = payloadHandler.parsePayload(extractedPayload, cryptoHandler);
+
         ExtractedData extractedData = payloadHandler.extractFileExtension(extractedPayload);
         setLastExtractedFileExtension(extractedData.extension);
         return extractedData.payload;
