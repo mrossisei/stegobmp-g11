@@ -14,7 +14,7 @@ public class SteganographyStrategyLSB4 implements  SteganographyStrategy {
         int carrierByteIndex = 0;
         for (byte b : payload) {
             for (int bit = 1; bit >= 0; bit--) {
-                modifiedPixelData[carrierByteIndex] = setLSB4(modifiedPixelData[carrierByteIndex], (byte) ((b >> (bit*4)) & 0x0F));
+                modifiedPixelData[carrierByteIndex] = setLSB4(modifiedPixelData[carrierByteIndex], (byte) (b >> (bit*4)));
                 carrierByteIndex++;
             }
         }

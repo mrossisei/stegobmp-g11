@@ -12,7 +12,7 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         int carrierByteIndex = 0;
         for (byte b : payload) {
             for (int bit = 7; bit >= 0; bit--) {
-                modifiedPixelData[carrierByteIndex] = setLSB(modifiedPixelData[carrierByteIndex], (byte) ((b >> bit) & 0x01));
+                modifiedPixelData[carrierByteIndex] = setLSB(modifiedPixelData[carrierByteIndex], (byte) (b >> bit));
                 carrierByteIndex++;
             }
         }
@@ -96,7 +96,7 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         // Clear the least significant bit (LSB) of the original byte
         byte clearedByte = (byte) (originalByte & 0xFE);
         // Set the LSB to the new bit
-        return (byte) (clearedByte | (bitToSet & 0x01)); //TODO this is unnecessary, & is done prior
+        return (byte) (clearedByte | (bitToSet & 1));
     }
 
     private int getLSB(byte b) {return b & 1;}
