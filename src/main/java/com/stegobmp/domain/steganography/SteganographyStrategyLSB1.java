@@ -15,6 +15,10 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         this.cryptoHandler = cryptoHandler;
     }
 
+    // recibe:
+    // | size | datos | ext
+    // | size | cifrado(size, datos, ext)
+
     @Override
     public byte[] embed(byte[] carrierPixelData, byte[] payload) {
         if (payload.length > getCapacity(carrierPixelData)) {
@@ -63,8 +67,9 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
                 (payloadSizeInfo[3] & 0xFF);
     }
 
-    private byte[] extractPayload(byte[] carrierPixelData, int payloadLength, int startBitIndex) {
+    private byte[] extractPayload(byte[] carrierPixelData, int payloadLength) {
         byte[] extractedPayload = new byte[payloadLength];
+        int startBitIndex = 0;
 
         for (int i = 0; i < payloadLength; i++) {
             byte b = extractByte(carrierPixelData, startBitIndex);
@@ -76,24 +81,22 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
 
     private byte[] extractDecryptedPayload(byte[] extractedPayload) {
         byte[] decryptedPayload = new byte[extractedPayload.length - 5]; //5 because '\0'
-        System.arraycopy(extractedPayload, 4, decryptedPayload, 0, extractedPayload.length - 5);
+        System.arraycopy(extractedPayload, 0, decryptedPayload, 0, extractedPayload.length - 5);
         return decryptedPayload;
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData) {
+    public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
         byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
-        int carrierBitIndex = 32; // header bits
+        int carrierBitIndex = 0; // header bits
 
         // Convertir Big Endian 4 bytes a int
-        int payloadLength = convertPayloadLength(payloadSizeInfo);
+        int payloadLength = convertPayloadLength(payloadSizeInfo) + 4;
 
-        // ---- Extraer el payload ----
-        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength, carrierBitIndex);
+        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength);
 
-        if (this.cryptoHandler != null) {
-            extractedPayload = this.cryptoHandler.decrypt(extractedPayload);
-            return extractDecryptedPayload(extractedPayload);
+        if (!hasExtension) {
+            return extractedPayload;
         }
 
         carrierBitIndex += payloadLength * 8; // Mover el índice después del payload extraído
