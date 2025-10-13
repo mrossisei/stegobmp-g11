@@ -2,6 +2,8 @@ package com.stegobmp.domain.steganography;
 
 import com.stegobmp.domain.crypto.CryptoHandler;
 
+import java.io.ByteArrayOutputStream;
+
 public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
     private final CryptoHandler cryptoHandler;
 
@@ -94,31 +96,22 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
             return extractDecryptedPayload(extractedPayload);
         }
 
-
         carrierBitIndex += payloadLength * 8; // Mover el índice después del payload extraído
 
-        byte[] extensionPayload = new byte[16];
-        int extIndex = 0;
-
+        ByteArrayOutputStream extensionStream = new ByteArrayOutputStream();
         while (carrierPixelData.length > carrierBitIndex) {
             byte b = extractByte(carrierPixelData, carrierBitIndex);
-            carrierBitIndex += 8; // Avanza también aquí
-            if (extIndex == extensionPayload.length) {
-                // Ampliar el buffer si es necesario
-                byte[] newExtensionPayload = new byte[extensionPayload.length * 2];
-                System.arraycopy(extensionPayload, 0, newExtensionPayload, 0, extensionPayload.length);
-                extensionPayload = newExtensionPayload;
-            }
+            carrierBitIndex += 8;
             if (b == '\0') {
                 break;
             }
-            extensionPayload[extIndex++] = b;
+            extensionStream.write(b);
         }
+        byte[] extensionPayload = extensionStream.toByteArray();
 
-
-        byte[] finalPayload = new byte[payloadLength + extIndex];
+        byte[] finalPayload = new byte[payloadLength + extensionPayload.length];
         System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
-        System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extIndex);
+        System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extensionPayload.length);
         extractedPayload = finalPayload;
 
 
