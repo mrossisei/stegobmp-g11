@@ -39,7 +39,7 @@ public class StegoBmpService {
 
         byte[] payloadToEmbed = payloadHandler.preparePayload(config.secretData(), config.inputFileName(), cryptoHandler);
 
-        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
+        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
 
         if (strategy.getCapacity(carrierImage.pixelData()) < payloadToEmbed.length) {
             throw new StegoException("El archivo portador no tiene suficiente capacidad para ocultar los datos.");
@@ -52,7 +52,7 @@ public class StegoBmpService {
 
     public byte[] extract() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
-        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm(), config.cryptoConfig().orElse(null));
+        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
         byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isEmpty());
 
         ExtractedFile extractedFile = payloadHandler.parsePayload(extractedPayload, cryptoHandler);

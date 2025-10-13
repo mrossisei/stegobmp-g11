@@ -5,16 +5,6 @@ import com.stegobmp.domain.crypto.CryptoHandler;
 import java.io.ByteArrayOutputStream;
 
 public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
-    private final CryptoHandler cryptoHandler;
-
-    public SteganographyStrategyLSB1() {
-        this.cryptoHandler = null;
-    }
-
-    public SteganographyStrategyLSB1(CryptoHandler cryptoHandler) {
-        this.cryptoHandler = cryptoHandler;
-    }
-
     // recibe:
     // | size | datos | ext
     // | size | cifrado(size, datos, ext)

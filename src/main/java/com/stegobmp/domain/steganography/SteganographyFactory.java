@@ -5,14 +5,10 @@ import com.stegobmp.domain.crypto.CryptoHandler;
 
 public class SteganographyFactory {
 
-    public static SteganographyStrategy getStrategy(StegAlgorithm algorithm, CryptoConfig cryptoConfig) {
-        CryptoHandler cryptoHandler = null;
-        if (cryptoConfig != null) {
-            cryptoHandler = new CryptoHandler(cryptoConfig);
-        }
+    public static SteganographyStrategy getStrategy(StegAlgorithm algorithm) {
         switch (algorithm) {
             case LSB1 -> {
-                return (cryptoHandler != null) ? new SteganographyStrategyLSB1(cryptoHandler) : new SteganographyStrategyLSB1();
+                return new SteganographyStrategyLSB1();
             }
             case LSB4 -> {
                 return new SteganographyStrategyLSB4();
