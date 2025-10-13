@@ -2,25 +2,19 @@ package com.stegobmp.domain.steganography;
 
 public class SteganographyFactory {
 
-
     public static SteganographyStrategy getStrategy(StegAlgorithm algorithm) {
-        // TODO
-        return new SteganographyStrategy() {
-            @Override
-            public byte[] embed(byte[] carrierPixelData, byte[] payload) {
-                return new byte[0];
+        switch (algorithm) {
+            case LSB1 -> {
+                return new SteganographyStrategyLSB1();
             }
-
-            @Override
-            public byte[] extract(byte[] carrierPixelData) {
-                return new byte[0];
+            case LSB4 -> {
+                return new SteganographyStrategyLSB4();
             }
-
-            @Override
-            public int getCapacity(byte[] carrierPixelData) {
-                return 0;
+            case LSBI -> {
+                return new SteganographyStrategyLSBI();
             }
-        };
+            default -> throw new IllegalArgumentException("Unsupported steganography algorithm: " + algorithm);
+        }
     }
 
 }

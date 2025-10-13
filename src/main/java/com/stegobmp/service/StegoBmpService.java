@@ -49,8 +49,11 @@ public class StegoBmpService {
      * Orquesta el proceso de extraer información.
      */
     public byte[] extract() {
-        // implementar camino inverso
-        return null;
+        BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
+
+        SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
+        byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isPresent());
+        return extractedPayload;
     }
 
 
