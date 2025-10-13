@@ -105,10 +105,10 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         while (carrierPixelData.length > carrierBitIndex) {
             byte b = extractByte(carrierPixelData, carrierBitIndex);
             carrierBitIndex += 8;
+            extensionStream.write(b);
             if (b == '\0') {
                 break;
             }
-            extensionStream.write(b);
         }
         byte[] extensionPayload = extensionStream.toByteArray();
 

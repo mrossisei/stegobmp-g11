@@ -38,7 +38,7 @@ public class PayloadHandler {
 
     // | size | data | ext |
     // | size | ciph(size, data, ext)
-    public ExtractedFile parsePayload(byte[] payload, CryptoHandler cryptoHandler) throws IOException {
+    public ExtractedFile parsePayload(byte[] payload, CryptoHandler cryptoHandler) {
         if(cryptoHandler == null){
             return parsePlaintextPayload(payload);
         }
@@ -56,7 +56,7 @@ public class PayloadHandler {
 
         byte[] data = Arrays.copyOfRange(plaintextPayload, SIZE_BYTES, SIZE_BYTES + size);
 
-        byte[] extensionBytes = Arrays.copyOfRange(plaintextPayload, SIZE_BYTES + size, plaintextPayload.length);
+        byte[] extensionBytes = Arrays.copyOfRange(plaintextPayload, SIZE_BYTES + size, plaintextPayload.length - 1); // Excluye el null terminator
 
         return new ExtractedFile(data, new String(extensionBytes, StandardCharsets.UTF_8));
     }

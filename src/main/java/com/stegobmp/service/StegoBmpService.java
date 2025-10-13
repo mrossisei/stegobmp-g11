@@ -57,9 +57,8 @@ public class StegoBmpService {
 
         ExtractedFile extractedFile = payloadHandler.parsePayload(extractedPayload, cryptoHandler);
 
-        ExtractedData extractedData = payloadHandler.extractFileExtension(extractedPayload);
-        setLastExtractedFileExtension(extractedData.extension);
-        return extractedData.payload;
+        setLastExtractedFileExtension(extractedFile.extension());
+        return extractedFile.fileData();
     }
     public String getLastExtractedFileExtension() {
         return lastExtractedFileExtension;
