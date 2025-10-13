@@ -96,7 +96,7 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         // Clear the least significant bit (LSB) of the original byte
         byte clearedByte = (byte) (originalByte & 0xFE);
         // Set the LSB to the new bit
-        return (byte) (clearedByte | (bitToSet & 0x01));
+        return (byte) (clearedByte | (bitToSet & 0x01)); //TODO this is unnecessary, & is done prior
     }
 
     private int getLSB(byte b) {return b & 1;}
