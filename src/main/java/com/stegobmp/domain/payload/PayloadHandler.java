@@ -2,6 +2,7 @@ package com.stegobmp.domain.payload;
 
 import com.stegobmp.domain.crypto.CryptoConfig;
 import com.stegobmp.domain.crypto.CryptoHandler;
+import com.stegobmp.service.StegoBmpService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -71,5 +72,22 @@ public class PayloadHandler {
             return "."; // Si no hay extensión o el punto está al final, devolvemos solo el punto.
         }
         return fileName.substring(lastDotIndex);
+    }
+    public StegoBmpService.ExtractedData extractFileExtension(byte[] data) {
+        int dotIndex = -1;
+        for (int i = data.length - 1; i >= 0; i--) {
+            if (data[i] == '.') {
+                dotIndex = i;
+                break;
+            }
+        }
+        if (dotIndex == -1) {
+            return new StegoBmpService.ExtractedData(data, "");
+        }
+
+        String extension = new String(data, dotIndex, data.length - dotIndex, StandardCharsets.UTF_8);
+        byte[] newData = new byte[dotIndex];
+        System.arraycopy(data, 0, newData, 0, dotIndex);
+        return new StegoBmpService.ExtractedData(newData, extension);
     }
 }

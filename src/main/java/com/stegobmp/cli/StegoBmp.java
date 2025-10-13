@@ -60,7 +60,14 @@ public class StegoBmp {
             writeFileBytes(cliConfig.outputFile(), outputFileBytes);
         } else { // EXTRACT
             byte[] extractedFileBytes = service.extract();
-            String outputFileName = cliConfig.outputFile(); //+ service.getLastExtractedFileExtension();
+            String outputFileName = cliConfig.outputFile();
+            String extractedExt = service.getLastExtractedFileExtension();
+            if (extractedExt != null && !extractedExt.isEmpty()) {
+                if (!extractedExt.startsWith(".")) {
+                    extractedExt = "." + extractedExt;
+                }
+                outputFileName += extractedExt;
+            }
             writeFileBytes(outputFileName, extractedFileBytes);
         }
 

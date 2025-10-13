@@ -31,43 +31,53 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
 
     @Override
     public byte[] extract(byte[] carrierPixelData, boolean isEncrypted) {
-        byte[] payloadSizeInfo = new byte[4]; // The first 4 bytes store the payload length
-        int carrierByteIndex = 0;
+        byte[] payloadSizeInfo = new byte[4]; // Los primeros 4 bytes almacenan el largo del payload
+        int carrierBitIndex = 0; // índice en bits, no en bytes
+
+        // ---- Extraer los 4 bytes que contienen el tamaño del payload ----
         for (int i = 0; i < 4; i++) {
-            byte b = extractByte(carrierPixelData, carrierByteIndex);
+            byte b = extractByte(carrierPixelData, carrierBitIndex);
             payloadSizeInfo[i] = b;
+            carrierBitIndex += 8; // Avanza 8 bits por byte
         }
 
-        // Convert Big Endian 4 bytes to int
+        // Convertir Big Endian 4 bytes a int
         int payloadLength = ((payloadSizeInfo[0] & 0xFF) << 24) |
-                            ((payloadSizeInfo[1] & 0xFF) << 16) |
-                            ((payloadSizeInfo[2] & 0xFF) << 8)  |
-                            (payloadSizeInfo[3] & 0xFF);
+                ((payloadSizeInfo[1] & 0xFF) << 16) |
+                ((payloadSizeInfo[2] & 0xFF) << 8)  |
+                (payloadSizeInfo[3] & 0xFF);
 
+
+        // ---- Extraer el payload ----
         byte[] extractedPayload = new byte[payloadLength];
 
         for (int i = 0; i < payloadLength; i++) {
-            byte b = extractByte(carrierPixelData, carrierByteIndex);
+            byte b = extractByte(carrierPixelData, carrierBitIndex);
             extractedPayload[i] = b;
+            carrierBitIndex += 8; // Avanza 8 bits por byte
         }
 
+        // ---- Si no está encriptado, continuar leyendo hasta encontrar '\0' ----
         if (!isEncrypted) {
-            // Continue extraction until \0 is found
-            byte[] extensionPayload = new byte[16]; // Assuming max extension length is 20 bytes
+            byte[] extensionPayload = new byte[16];
             int extIndex = 0;
+
             while (true) {
-                byte b = extractByte(carrierPixelData, carrierByteIndex);
-                if (extIndex == payloadLength) {
-                    // Extend the array if needed
+                byte b = extractByte(carrierPixelData, carrierBitIndex);
+                carrierBitIndex += 8; // Avanza también aquí
+                if (extIndex == extensionPayload.length) {
+                    // Ampliar el buffer si es necesario
                     byte[] newExtensionPayload = new byte[extensionPayload.length * 2];
                     System.arraycopy(extensionPayload, 0, newExtensionPayload, 0, extensionPayload.length);
                     extensionPayload = newExtensionPayload;
                 }
-                extensionPayload[extIndex++] = b;
-                if (b =='\0') {
+                if (b == '\0') {
                     break;
                 }
+                extensionPayload[extIndex++] = b;
             }
+
+
             byte[] finalPayload = new byte[payloadLength + extIndex];
             System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
             System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extIndex);
@@ -89,7 +99,5 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         return (byte) (clearedByte | (bitToSet & 0x01));
     }
 
-    private byte getLSB(byte originalByte) {
-        return (byte) (originalByte & 0x01);
-    }
+    private int getLSB(byte b) {return b & 1;}
 }

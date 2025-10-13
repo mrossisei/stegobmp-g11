@@ -19,7 +19,7 @@ public class StegoBmpService {
     private final BmpHandler bmpHandler;
     private final PayloadHandler payloadHandler;
     private final ServiceConfig config;
-
+    private String lastExtractedFileExtension = "";
     public StegoBmpService(ServiceConfig serviceConfig) {
         this.bmpHandler = new BmpHandler();
         this.payloadHandler = new PayloadHandler();
@@ -50,11 +50,19 @@ public class StegoBmpService {
      */
     public byte[] extract() {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
-
         SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
         byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isPresent());
-        return extractedPayload;
+        ExtractedData extractedData = payloadHandler.extractFileExtension(extractedPayload);
+        setLastExtractedFileExtension(extractedData.extension);
+        return extractedData.payload;
+    }
+    public String getLastExtractedFileExtension() {
+        return lastExtractedFileExtension;
+    }
+    public void setLastExtractedFileExtension(String ext) {
+        this.lastExtractedFileExtension = ext;
     }
 
-
+    public record ExtractedData(byte[] payload, String extension) {
+    }
 }

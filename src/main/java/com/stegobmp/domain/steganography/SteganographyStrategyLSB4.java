@@ -7,7 +7,7 @@ public class SteganographyStrategyLSB4 implements  SteganographyStrategy {
     }
 
     @Override
-    public byte[] extract(byte[] carrierPixelData, boolean isEncrypted) {
+    public byte[] extract(byte[] carrierPixelData, boolean isEncrypted){
         return new byte[0];
     }
 
