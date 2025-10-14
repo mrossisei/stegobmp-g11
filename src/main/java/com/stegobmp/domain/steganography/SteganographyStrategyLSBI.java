@@ -1,5 +1,6 @@
 package com.stegobmp.domain.steganography;
 
+import java.io.ByteArrayOutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -8,10 +9,11 @@ public class SteganographyStrategyLSBI implements SteganographyStrategy {
 
     // 4 bytes para el mapa de inversión y 4 bytes (int) para la longitud del payload.
     private static final int MAP_RESERVED_BYTES = 4;
-    private static final int LENGTH_METADATA_BYTES = 4;
     private static final int METADATA_TOTAL_BYTES = MAP_RESERVED_BYTES; // private static final int METADATA_TOTAL_BYTES = MAP_RESERVED_BYTES + LENGTH_METADATA_BYTES;
 
     private static final String[] PATTERNS = {"00", "01", "10", "11"};
+
+    private Map<String, Boolean> inversionMap;
 
     /**
      * Oculta un payload dentro de los datos de píxeles de una imagen usando LSBi.
@@ -25,57 +27,58 @@ public class SteganographyStrategyLSBI implements SteganographyStrategy {
 
         byte[] stegoData = carrierPixelData.clone();
 
-        // Preparar el payload completo: [longitud del payload] + [payload]
-        // byte[] payloadLengthBytes = BitUtils.intToBytes(payload.length);
-        byte[] fullPayload = new byte[payload.length]; // byte[] fullPayload = new byte[payloadLengthBytes.length + payload.length];
-        // System.arraycopy(payloadLengthBytes, 0, fullPayload, 0, payloadLengthBytes.length);
-        System.arraycopy(payload, 0, fullPayload, 0, payload.length); // System.arraycopy(payload, 0, fullPayload, payloadLengthBytes.length, payload.length);
+        byte[] fullPayload = payload.clone();
 
         byte[] messageBits = BitUtils.bytesToBits(fullPayload);
 
         // --- PRIMERA PASADA: ANÁLISIS ---
         Map<String, int[]> changeCounters = analyzeChanges(stegoData, messageBits);
 
-        // --- CREACIÓN DEL MAPA DE INVERSIÓN ---
-        Map<String, Boolean> inversionMap = createInversionMap(changeCounters);
+        // --- CREACIÓN DEL MAPA DE INVERSIÓN (a partir del análisis) ---
+        inversionMap = createInversionMap(changeCounters);
 
         // --- SEGUNDA PASADA: EMBEBIDO ---
-        embedData(stegoData, messageBits, inversionMap);
+        embedData(stegoData, messageBits);
 
         return stegoData;
     }
 
 
-    // Extrae un payload oculto de los datos de píxeles de una imagen. TODO: lo deje comentado porque es lo que hizo la IA y no llegue a corregirlo
     @Override
-    public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
-//        // Extraer el mapa de inversión de los primeros bytes.
-//        Map<String, Boolean> inversionMap = extractInversionMap(carrierPixelData);
-//
-//        // Extraer la longitud del payload (los siguientes 32 bits/bytes).
-//        int payloadLengthInBytes = extractPayloadLength(carrierPixelData, inversionMap); // FIXME: extractPayloadLength no se si está bien hecho
-//        int payloadLengthInBits = payloadLengthInBytes * 8; // TODO: ¿Porque?
-//
-//        // Extraer los bits del payload.
-//        byte[] extractedBits = new byte[payloadLengthInBits];
-//        int payloadDataStartOffset = METADATA_TOTAL_BYTES;
-//
-//        for (int i = 0; i < payloadLengthInBits; i++) {
-//            int carrierIndex = payloadDataStartOffset + i;
-//            byte carrierByte = carrierPixelData[carrierIndex];
-//
-//            String pattern = BitUtils.getPattern(carrierByte);
-//            byte lsb = BitUtils.getLsb(carrierByte);
-//
-//            if (inversionMap.get(pattern)) {
-//                extractedBits[i] = (byte) (lsb == 0 ? 1 : 0); // Invertir bit
-//            } else {
-//                extractedBits[i] = lsb;
-//            }
-//        }
-//
-//        return BitUtils.bitsToBytes(extractedBits);
-        return new byte[0];
+    public byte[] extract(byte[] carrierPixelData, boolean withExtension) {
+        inversionMap = extractInversionMap(carrierPixelData);
+
+        byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData, MAP_RESERVED_BYTES);
+
+        // Convertir Big Endian 4 bytes a int
+        int payloadLength = convertPayloadLength(payloadSizeInfo) + 4;
+
+        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength);
+
+        if (!withExtension) {
+            return extractedPayload;
+        }
+
+        int carrierIndex = payloadLength * 8; // Mover el índice después del payload extraído
+
+        ByteArrayOutputStream extensionStream = new ByteArrayOutputStream();
+        while (carrierPixelData.length > carrierIndex) {
+            byte b = extractByte(carrierPixelData, carrierIndex);
+            carrierIndex += 8;
+            extensionStream.write(b);
+            if (b == '\0') {
+                break;
+            }
+        }
+        byte[] extensionPayload = extensionStream.toByteArray();
+
+        byte[] finalPayload = new byte[payloadLength + extensionPayload.length];
+        System.arraycopy(extractedPayload, 0, finalPayload, 0, payloadLength);
+        System.arraycopy(extensionPayload, 0, finalPayload, payloadLength, extensionPayload.length);
+        extractedPayload = finalPayload;
+
+
+        return extractedPayload;
     }
 
     // TODO: revisar
@@ -87,6 +90,59 @@ public class SteganographyStrategyLSBI implements SteganographyStrategy {
 
 
     // --- Métodos privados ---
+
+
+
+    // consume 8 bytes de carrierPixelData para extraer el byte escondido
+    private byte extractByte(byte[] carrierPixelData, int startBitIndex) {
+        byte b = 0;
+        for (int bit = 7; bit >= 0; bit--) {
+            byte carrierByte = carrierPixelData[startBitIndex];
+            String pattern = BitUtils.getPattern(carrierByte);
+            byte lsb = BitUtils.getLsb(carrierByte);
+
+            if (inversionMap.get(pattern)) {
+                lsb = (byte) (lsb == 0 ? 1 : 0); // invertirlo
+            }
+
+            b |= (byte) (lsb << bit);
+            startBitIndex++;
+        }
+        return b;
+    }
+
+    private byte[] extractPayloadSizeInfo(byte[] carrierPixel, int carrierIndex) {
+        byte[] payloadSizeInfo = new byte[4];
+
+        // ---- Extraer los 4 bytes que contienen el tamaño del payload ----
+        for (int i = 0; i < 4; i++) {
+            byte b = extractByte(carrierPixel, carrierIndex);
+            payloadSizeInfo[i] = b;
+            carrierIndex += 8;
+        }
+        return payloadSizeInfo;
+    }
+
+    private int convertPayloadLength(byte[] payloadSizeInfo) {
+        return ((payloadSizeInfo[0] & 0xFF) << 24) |
+                ((payloadSizeInfo[1] & 0xFF) << 16) |
+                ((payloadSizeInfo[2] & 0xFF) << 8)  |
+                (payloadSizeInfo[3] & 0xFF);
+    }
+
+
+    private byte[] extractPayload(byte[] carrierPixelData, int payloadLength) {
+        byte[] extractedPayload = new byte[payloadLength];
+        int startBitIndex = 0;
+
+        for (int i = 0; i < payloadLength; i++) {
+            byte b = extractByte(carrierPixelData, startBitIndex);
+            extractedPayload[i] = b;
+            startBitIndex += 8;
+        }
+        return extractedPayload;
+    }
+
 
     // Para cada patrón nos fijamos la cantidad de veces que cambias el LSB y la cantidad de veces que se mantiene
     private Map<String, int[]> analyzeChanges(byte[] carrierData, byte[] messageBits) {
@@ -125,7 +181,7 @@ public class SteganographyStrategyLSBI implements SteganographyStrategy {
     }
 
     // Ocultamos el mensaje en el portador (junto con el "mapa")
-    private void embedData(byte[] carrierData, byte[] messageBits, Map<String, Boolean> inversionMap) {
+    private void embedData(byte[] carrierData, byte[] messageBits) {
         // Ocultar el mapa de inversión.
         int mapBitIndex = 0;
         for (String pattern : PATTERNS) {
@@ -167,26 +223,24 @@ public class SteganographyStrategyLSBI implements SteganographyStrategy {
     }
 
 
-    // FIXME:
-    private int extractPayloadLength(byte[] carrierPixelData, Map<String, Boolean> inversionMap) {
-        byte[] lengthBits = new byte[LENGTH_METADATA_BYTES * 8];
-        int lengthDataStartOffset = MAP_RESERVED_BYTES;
-
-        for (int i = 0; i < lengthBits.length; i++) {
-            int carrierIndex = lengthDataStartOffset + i;
-            byte carrierByte = carrierPixelData[carrierIndex];
-
-            String pattern = BitUtils.getPattern(carrierByte);
-            byte lsb = BitUtils.getLsb(carrierByte);
-
-            if (inversionMap.get(pattern)) {
-                lengthBits[i] = (byte) (lsb == 0 ? 1 : 0); // Invertir bit
-            } else {
-                lengthBits[i] = lsb;
-            }
-        }
-
-        byte[] lengthBytes = BitUtils.bitsToBytes(lengthBits);
-        return BitUtils.bytesToInt(lengthBytes);
-    }
+//    private int extractPayloadLength(byte[] carrierPixelData, Map<String, Boolean> inversionMap) {
+//        byte[] lengthBits = new byte[LENGTH_METADATA_BYTES * 8];
+//
+//        for (int i = 0; i < lengthBits.length; i++) {
+//            int carrierIndex = MAP_RESERVED_BYTES + i;
+//            byte carrierByte = carrierPixelData[carrierIndex];
+//
+//            String pattern = BitUtils.getPattern(carrierByte);
+//            byte lsb = BitUtils.getLsb(carrierByte);
+//
+//            if (inversionMap.get(pattern)) {
+//                lengthBits[i] = (byte) (lsb == 0 ? 1 : 0); // Invertir bit
+//            } else {
+//                lengthBits[i] = lsb;
+//            }
+//        }
+//
+//        byte[] lengthBytes = BitUtils.bitsToBytes(lengthBits);
+//        return BitUtils.bytesToInt(lengthBytes);
+//    }
 }

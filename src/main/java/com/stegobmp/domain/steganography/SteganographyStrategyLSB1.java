@@ -1,7 +1,5 @@
 package com.stegobmp.domain.steganography;
 
-import com.stegobmp.domain.crypto.CryptoHandler;
-
 import java.io.ByteArrayOutputStream;
 
 public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
@@ -69,16 +67,15 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
         return extractedPayload;
     }
 
-    private byte[] extractDecryptedPayload(byte[] extractedPayload) {
-        byte[] decryptedPayload = new byte[extractedPayload.length - 5]; //5 because '\0'
-        System.arraycopy(extractedPayload, 0, decryptedPayload, 0, extractedPayload.length - 5);
-        return decryptedPayload;
-    }
+//    private byte[] extractDecryptedPayload(byte[] extractedPayload) {
+//        byte[] decryptedPayload = new byte[extractedPayload.length - 5]; //5 because '\0'
+//        System.arraycopy(extractedPayload, 0, decryptedPayload, 0, extractedPayload.length - 5);
+//        return decryptedPayload;
+//    }
 
     @Override
     public byte[] extract(byte[] carrierPixelData, boolean withExtension) {
         byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
-        int carrierBitIndex = 0; // header bits
 
         // Convertir Big Endian 4 bytes a int
         int payloadLength = convertPayloadLength(payloadSizeInfo) + 4;
@@ -89,12 +86,12 @@ public class SteganographyStrategyLSB1 implements  SteganographyStrategy {
             return extractedPayload;
         }
 
-        carrierBitIndex += payloadLength * 8; // Mover el índice después del payload extraído
+        int carrierIndex = payloadLength * 8; // Mover el índice después del payload extraído
 
         ByteArrayOutputStream extensionStream = new ByteArrayOutputStream();
-        while (carrierPixelData.length > carrierBitIndex) {
-            byte b = extractByte(carrierPixelData, carrierBitIndex);
-            carrierBitIndex += 8;
+        while (carrierPixelData.length > carrierIndex) {
+            byte b = extractByte(carrierPixelData, carrierIndex);
+            carrierIndex += 8;
             extensionStream.write(b);
             if (b == '\0') {
                 break;
