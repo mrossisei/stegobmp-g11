@@ -14,13 +14,13 @@ public class SteganographyStrategyLSBI2 extends SteganographyStrategyAbs{
         super(StegAlgorithm.LSBI);
     }
 
-    @Override
-    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload, int carrierByteIndex) {
-        Map<Integer, int[]> counters = new LinkedHashMap<>();
+    private void initializeCounters(Map<Integer, int[]> counters) {
         for (int pattern : PATTERNS) {
             counters.put(pattern, new int[2]); // [0] = sin cambio, [1] = con cambio
         }
+    }
 
+    private void analyzePayload(byte[] carrierPixelData, byte[] payload, int carrierByteIndex, Map<Integer, int[]> counters) {
         for (byte b : payload) {
             for (int bit = 7; bit >= 0; bit--) {
                 if (((b >> bit) & 1) != (carrierPixelData[carrierByteIndex] & 1)) {
@@ -31,20 +31,39 @@ public class SteganographyStrategyLSBI2 extends SteganographyStrategyAbs{
                 carrierByteIndex++;
             }
         }
+    }
+
+    private void fillInversionMap(Map<Integer, int[]> counters) {
         for (int pattern : PATTERNS) {
             int[] aux = counters.get(pattern);
             inversionMap.put(pattern, aux[0] < aux[1]); // [0] = sin cambio, [1] = con cambio
         }
+    }
 
-        byte[] modified = carrierPixelData.clone();
+    private void obfuscateInversionMap(byte[] modified) {
         int mapBitIndex = 0;
-
         //oculto mapa
         for (int pattern : PATTERNS) {
             byte bitToHide = (byte) (inversionMap.get(pattern) ? 1 : 0);
             modified[mapBitIndex] = setLSB(modified[mapBitIndex], bitToHide);
             mapBitIndex++;
         }
+    }
+
+    @Override
+    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload, int carrierByteIndex) {
+        Map<Integer, int[]> counters = new LinkedHashMap<>();
+
+        initializeCounters(counters);
+
+        analyzePayload(carrierPixelData, payload, carrierByteIndex, counters);
+
+
+        fillInversionMap(counters);
+
+        byte[] modified = carrierPixelData.clone();
+
+        obfuscateInversionMap(modified);
 
         return super.modifyCarrierData(modified, payload, 4);
     }
