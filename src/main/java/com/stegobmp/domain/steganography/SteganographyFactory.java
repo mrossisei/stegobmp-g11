@@ -14,7 +14,7 @@ public class SteganographyFactory {
                 return new SteganographyStrategyLSB4();
             }
             case LSBI -> {
-                return new SteganographyStrategyLSBI();
+                return new SteganographyStrategyLSBI2();
             }
             default -> throw new IllegalArgumentException("Unsupported steganography algorithm: " + algorithm);
         }

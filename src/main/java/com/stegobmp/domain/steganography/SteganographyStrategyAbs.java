@@ -5,8 +5,8 @@ import java.io.ByteArrayOutputStream;
 public abstract class SteganographyStrategyAbs implements SteganographyStrategy {
 
     private final StegAlgorithm stegAlgorithm;
-    private final int byteRatio;
-    private final int bitsPerByte;
+    protected final int byteRatio;
+    protected final int bitsPerByte;
     protected final static int PAYLOAD_SIZE_INFO_LENGTH = 4;
 
     public SteganographyStrategyAbs(StegAlgorithm stegAlgorithm) {
@@ -24,13 +24,37 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
         if (payload.length > getCapacity(carrierPixelData)) {
             throw new IllegalArgumentException("Payload is too large to fit in the carrier image using " + stegAlgorithm.name());
         }
+        return modifyCarrierData(carrierPixelData, payload, 0);
+    }
 
-        return carrierPixelData.clone();
+    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload, int carrierByteIndex) {
+        byte[] modifiedPixelData = carrierPixelData.clone();
+
+        for (byte b : payload) {
+            for (int bit = byteRatio-1; bit >= 0; bit--) {
+                modifiedPixelData[carrierByteIndex] = setLSB(modifiedPixelData[carrierByteIndex], (byte) (b >> bit * bitsPerByte));
+                carrierByteIndex++;
+            }
+        }
+        return modifiedPixelData;
     }
 
     @Override
     public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
-        return new byte[0];
+        byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
+
+        // Convertir Big Endian 4 bytes a int
+        int payloadLength = convertPayloadLength(payloadSizeInfo) + PAYLOAD_SIZE_INFO_LENGTH;
+
+        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength);
+
+        if (!hasExtension) {
+            return extractedPayload;
+        }
+
+        byte[] extensionPayload = extractExtension(carrierPixelData, payloadLength);
+
+        return buildPayloadWithExtension(extractedPayload, extensionPayload);
     }
 
     @Override
@@ -110,9 +134,9 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
     protected byte setLSB(byte originalByte, byte bitToSet) {
         int bitsToClear = bitsPerByte == 1 ? 0xFE : 0xF0;
         byte clearedByte = (byte) (originalByte & bitsToClear);
-        return (byte) (clearedByte | (bitToSet & bitsPerByte));
+        return (byte) (clearedByte | (bitToSet & ~bitsToClear));
     }
 
-    protected int getLSB(byte b) {return b & bitsPerByte;}
+    protected int getLSB(byte b) {return b & (bitsPerByte == 1 ? 1 : 0x0F);}
 
 }
