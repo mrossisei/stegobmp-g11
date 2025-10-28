@@ -44,17 +44,34 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
         byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
 
         // Convertir Big Endian 4 bytes a int
-        int payloadLength = convertPayloadLength(payloadSizeInfo) + PAYLOAD_SIZE_INFO_LENGTH;
-
-        byte[] extractedPayload = extractPayload(carrierPixelData, payloadLength);
-
-        if (!hasExtension) {
-            return extractedPayload;
+        int payloadLength = convertPayloadLength(payloadSizeInfo);
+        int dataStartBitIndex = PAYLOAD_SIZE_INFO_LENGTH * byteRatio;
+        byte[] extractedData = extractPayload(carrierPixelData, payloadLength, dataStartBitIndex);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(payloadSizeInfo);
+            outputStream.write(extractedData);
+        } catch (Exception e) {
+            throw new RuntimeException("Error building payload", e);
         }
 
-        byte[] extensionPayload = extractExtension(carrierPixelData, payloadLength);
+        if (!hasExtension) {
+            return outputStream.toByteArray();
+        }
 
-        return buildPayloadWithExtension(extractedPayload, extensionPayload);
+        int extStartBitIndex = dataStartBitIndex + (payloadLength * byteRatio);
+
+
+        byte[] extensionPayload = extractExtension(carrierPixelData, extStartBitIndex);
+
+
+        try {
+            outputStream.write(extensionPayload);
+        } catch (Exception e) {
+            throw new RuntimeException("Error building payload extension", e);
+        }
+
+        return outputStream.toByteArray();
     }
 
     @Override
@@ -74,9 +91,8 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
         return b;
     }
 
-    protected byte[] extractPayload(byte[] carrierPixelData, int payloadLength) {
+    protected byte[] extractPayload(byte[] carrierPixelData, int payloadLength, int startBitIndex) {
         byte[] extractedPayload = new byte[payloadLength];
-        int startBitIndex = 0;
 
         for (int i = 0; i < payloadLength; i++) {
             byte b = extractByte(carrierPixelData, startBitIndex);
@@ -106,7 +122,6 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
     }
 
     protected byte[] extractExtension(byte[] carrierPixelData, int startBitIndex) {
-        startBitIndex = startBitIndex * byteRatio;
         ByteArrayOutputStream extensionStream = new ByteArrayOutputStream();
         while (carrierPixelData.length > startBitIndex) {
             byte b = extractByte(carrierPixelData, startBitIndex);

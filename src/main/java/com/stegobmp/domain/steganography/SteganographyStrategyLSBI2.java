@@ -91,8 +91,11 @@ public class SteganographyStrategyLSBI2 extends SteganographyStrategyAbs{
 
     @Override
     protected int getLSB(byte b) {
+        int lsb = super.getLSB(b);
         int key = b & 6;
-        if (inversionMap.get(key)) b = (byte)(~b & 1);
-        return super.getLSB(b);
+        if (inversionMap.get(key)) {
+            return lsb == 0 ? 1 : 0;
+        }
+        return lsb;
     }
 }
