@@ -76,7 +76,7 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
 
     @Override
     public int getCapacity(byte[] carrierPixelData) {
-        return (int) Math.ceil( carrierPixelData.length / (double) byteRatio );
+        return (int) Math.floor( carrierPixelData.length / (double) byteRatio );
     }
 
 
