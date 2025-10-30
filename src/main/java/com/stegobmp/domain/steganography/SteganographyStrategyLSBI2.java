@@ -12,14 +12,7 @@ public class SteganographyStrategyLSBI2 extends SteganographyStrategyAbs {
     private final Map<Integer, Boolean> inversionMap = new HashMap<>();
 
 
-    private static class ExtractResult {
-        final byte extractedByte;
-        final int nextIndex;
-
-        ExtractResult(byte extractedByte, int nextIndex) {
-            this.extractedByte = extractedByte;
-            this.nextIndex = nextIndex;
-        }
+    private record ExtractResult(byte extractedByte, int nextIndex) {
     }
 
     public SteganographyStrategyLSBI2() {

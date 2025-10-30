@@ -27,14 +27,7 @@ public class CryptoHandler {
     private static final int PBKDF2_ITER = 10000;
 
     // Clase interna simple para transportar el material criptográfico derivado
-    private static class DerivedCryptoMaterial {
-        final SecretKey key;
-        final IvParameterSpec ivSpec;
-
-        DerivedCryptoMaterial(SecretKey key, IvParameterSpec ivSpec) {
-            this.key = key;
-            this.ivSpec = ivSpec;
-        }
+        private record DerivedCryptoMaterial(SecretKey key, IvParameterSpec ivSpec) {
     }
 
     public CryptoHandler(CryptoConfig cryptoConfig) {
@@ -66,17 +59,7 @@ public class CryptoHandler {
         // 1. Determinar longitudes de Key e IV
         // Esta lógica se basa en el CryptoHandler original,
         // ya que depende del enum CryptoAlgorithm que no tengo.
-        int keyLengthBytes;
-        if (jceAlgorithmName.equals("AES")) {
-            keyLengthBytes = switch (cryptoConfig.cryptoAlgorithm()) {
-                case AES128 -> 16; // 128 bits
-                case AES192 -> 24; // 192 bits
-                case AES256 -> 32; // 256 bits
-                default -> throw new IllegalArgumentException("Algoritmo AES no soportado");
-            };
-        } else { // DESede (3DES) [cite: 185]
-            keyLengthBytes = 24; // 192 bits (3 * 64 bits, aunque 3*56 efectivos)
-        }
+        int keyLengthBytes = getKeyLengthBytes(jceAlgorithmName);
 
         // AES usa bloques de 16 bytes (128 bits). 3DES usa 8 bytes (64 bits).
         int ivLengthBytes = jceAlgorithmName.equals("AES") ? 16 : 8;
@@ -100,6 +83,21 @@ public class CryptoHandler {
         IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
         return new DerivedCryptoMaterial(secretKey, ivSpec);
+    }
+
+    private int getKeyLengthBytes(String jceAlgorithmName) {
+        int keyLengthBytes;
+        if (jceAlgorithmName.equals("AES")) {
+            keyLengthBytes = switch (cryptoConfig.cryptoAlgorithm()) {
+                case AES128 -> 16; // 128 bits
+                case AES192 -> 24; // 192 bits
+                case AES256 -> 32; // 256 bits
+                default -> throw new IllegalArgumentException("Algoritmo AES no soportado");
+            };
+        } else { // DESede (3DES) [cite: 185]
+            keyLengthBytes = 24; // 192 bits (3 * 64 bits, aunque 3*56 efectivos)
+        }
+        return keyLengthBytes;
     }
 
     /**
