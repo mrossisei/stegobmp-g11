@@ -38,7 +38,7 @@ public class CryptoHandler {
         String jceAlgorithmName = getAlgorithmName();
         String password = cryptoConfig.password();
 
-        int keyLengthBytes = getKeyLengthBytes(jceAlgorithmName);
+        int keyLengthBytes = getKeyLengthBytes();
 
         int ivLengthBytes = jceAlgorithmName.equals("AES") ? 16 : 8;
 
@@ -60,7 +60,7 @@ public class CryptoHandler {
         return new DerivedCryptoMaterial(secretKey, ivSpec);
     }
 
-    private int getKeyLengthBytes(String jceAlgorithmName) {
+    private int getKeyLengthBytes() {
         return switch (cryptoConfig.cryptoAlgorithm()) {
             case AES128 -> 16;
             case AES256 -> 32;
