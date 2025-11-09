@@ -24,14 +24,15 @@ public class BmpHandler {
      * @return Un objeto BmpImage que contiene el encabezado y los datos de los píxeles.
      */
     public BmpImage parseBmp(byte[] bmpData) {
-        if (bmpData.length < HEADER_SIZE) {
+        int headerSize = getHeaderSize(bmpData);
+        if (bmpData.length < headerSize) {
             throw new StegoException("Datos BMP inválidos: el tamaño es menor que el del encabezado.");
         }
 
-        byte[] header = Arrays.copyOfRange(bmpData, 0, HEADER_SIZE);
+        byte[] header = Arrays.copyOfRange(bmpData, 0, headerSize);
         validateHeader(header);
 
-        byte[] pixelData = Arrays.copyOfRange(bmpData, HEADER_SIZE, bmpData.length);
+        byte[] pixelData = Arrays.copyOfRange(bmpData, headerSize, bmpData.length);
         return new BmpImage(header, pixelData);
     }
 
@@ -67,6 +68,17 @@ public class BmpHandler {
         if (headerBuffer.getInt(30) != COMPRESSION_METHOD_REQUIRED) {
             throw new StegoException("El archivo BMP no debe tener compresión.");
         }
+    }
+    private int getHeaderSize(byte[] bmpData) {
+        if (bmpData.length < 14) {
+            throw new StegoException("Datos BMP inválidos: el tamaño es menor que el encabezado mínimo.");
+        }
+
+        ByteBuffer buffer = ByteBuffer.wrap(bmpData).order(ByteOrder.LITTLE_ENDIAN);
+
+        int pixelDataOffset = buffer.getInt(10);
+
+        return pixelDataOffset;
     }
 }
 
