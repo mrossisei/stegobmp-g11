@@ -24,11 +24,12 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
         if (payload.length > getCapacity(carrierPixelData)) {
             throw new IllegalArgumentException("Payload is too large to fit in the carrier image using " + stegAlgorithm.name());
         }
-        return modifyCarrierData(carrierPixelData, payload, 0);
+        return modifyCarrierData(carrierPixelData, payload);
     }
 
-    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload, int carrierByteIndex) {
+    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload) {
         byte[] modifiedPixelData = carrierPixelData.clone();
+        int carrierByteIndex = 0;
 
         for (byte b : payload) {
             for (int bit = byteRatio-1; bit >= 0; bit--) {
@@ -128,17 +129,6 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
             }
         }
         return extensionStream.toByteArray();
-    }
-
-    protected byte[] buildPayloadWithExtension(byte[] payload, byte[] extension) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            outputStream.write(payload);
-            outputStream.write(extension);
-        } catch (Exception e) {
-            throw new RuntimeException("Error building payload with extension", e);
-        }
-        return outputStream.toByteArray();
     }
 
     protected byte setLSB(byte originalByte, byte bitToSet) {

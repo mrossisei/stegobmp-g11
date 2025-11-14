@@ -28,24 +28,7 @@ public class StegoBmp {
             secretData = readFileBytes(cliConfig.inputFile());
         }
 
-        Optional<CryptoConfig> cryptoConfig = Optional.empty();
-        if (cliConfig.cryptoAlgorithm().isPresent()) {
-            cryptoConfig = Optional.of(new CryptoConfig(
-                    cliConfig.cryptoAlgorithm().get(),
-                    cliConfig.cryptoMode().get(),
-                    cliConfig.password().get()
-            ));
-        }
-
-        ServiceConfig serviceConfig = new ServiceConfig(
-                carrierData,
-                secretData,
-                cliConfig.inputFile(),
-                cliConfig.stegAlgorithm(),
-                cryptoConfig
-        );
-
-        StegoBmpService service = new StegoBmpService(serviceConfig);
+        StegoBmpService service = getStegoBmpService(cliConfig, carrierData, secretData);
 
         if (cliConfig.operationMode() == OperationMode.EMBED) {
             byte[] outputFileBytes = service.embed();
@@ -64,6 +47,27 @@ public class StegoBmp {
         }
 
 
+    }
+
+    private static StegoBmpService getStegoBmpService(CliConfig cliConfig, byte[] carrierData, byte[] secretData) {
+        Optional<CryptoConfig> cryptoConfig = Optional.empty();
+        if (cliConfig.cryptoAlgorithm().isPresent()) {
+            cryptoConfig = Optional.of(new CryptoConfig(
+                    cliConfig.cryptoAlgorithm().get(),
+                    cliConfig.cryptoMode().get(),
+                    cliConfig.password().get()
+            ));
+        }
+
+        ServiceConfig serviceConfig = new ServiceConfig(
+                carrierData,
+                secretData,
+                cliConfig.inputFile(),
+                cliConfig.stegAlgorithm(),
+                cryptoConfig
+        );
+
+        return new StegoBmpService(serviceConfig);
     }
 
 

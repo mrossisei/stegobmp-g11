@@ -10,7 +10,6 @@ import java.util.Arrays;
 
 public class BmpHandler {
 
-    public static final int HEADER_SIZE = 54;
     private static final short BITS_PER_PIXEL_REQUIRED = 24;
     private static final int COMPRESSION_METHOD_REQUIRED = 0; // BI_RGB
 
@@ -57,9 +56,7 @@ public class BmpHandler {
 
         ByteBuffer buffer = ByteBuffer.wrap(bmpData).order(ByteOrder.LITTLE_ENDIAN);
 
-        int pixelDataOffset = buffer.getInt(10);
-
-        return pixelDataOffset;
+        return buffer.getInt(10);
     }
 }
 

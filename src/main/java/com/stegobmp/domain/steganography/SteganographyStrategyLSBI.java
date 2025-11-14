@@ -30,11 +30,11 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
     }
 
     @Override
-    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload, int carrierByteIndex_ignored) {
+    protected byte[] modifyCarrierData(byte[] carrierPixelData, byte[] payload) {
         Map<Integer, int[]> counters = new LinkedHashMap<>();
         initializeCounters(counters);
 
-        analyzePayload(carrierPixelData, payload, METADATA_TOTAL_BYTES, counters);
+        analyzePayload(carrierPixelData, payload, counters);
 
         fillInversionMap(counters);
 
@@ -67,7 +67,8 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
     }
 
 
-    private void analyzePayload(byte[] carrierPixelData, byte[] payload, int carrierByteIndex, Map<Integer, int[]> counters) {
+    private void analyzePayload(byte[] carrierPixelData, byte[] payload, Map<Integer, int[]> counters) {
+        int carrierByteIndex = METADATA_TOTAL_BYTES;
         for (byte b : payload) {
             for (int bit = 7; bit >= 0; bit--) {
                 if (carrierByteIndex % 3 == 2) {

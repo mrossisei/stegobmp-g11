@@ -11,7 +11,6 @@ import java.util.Optional;
 
 public class CommandLineParser {
 
-    //Parsea el array de argumentos y devuelve un objeto de configuración.
     public static CliConfig parse(String[] args) throws StegoException {
         if (args.length == 0) {
             throw new StegoException("No se proporcionaron argumentos. Uso: stegobmp -embed | -extract ...");

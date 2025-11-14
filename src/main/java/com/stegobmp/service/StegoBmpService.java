@@ -42,7 +42,7 @@ public class StegoBmpService {
         return bmpHandler.writeBmpToBytes(outputImage);
     }
 
-    public byte[] extract() throws IOException {
+    public byte[] extract() {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
         SteganographyStrategy strategy = SteganographyFactory.getStrategy(config.stegAlgorithm());
         byte[] extractedPayload = strategy.extract(carrierImage.pixelData(), config.cryptoConfig().isEmpty());
@@ -57,8 +57,5 @@ public class StegoBmpService {
     }
     public void setLastExtractedFileExtension(String ext) {
         this.lastExtractedFileExtension = ext;
-    }
-
-    public record ExtractedData(byte[] payload, String extension) {
     }
 }
