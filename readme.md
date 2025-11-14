@@ -38,19 +38,19 @@ con todas las dependencias incluidas).
 
 ## ▶️ Ejecución
 
-El proyecto incluye un script (`stegobmp.sh`) para facilitar la
+El proyecto incluye un script (`stegobmp`) para facilitar la
 ejecución del `.jar`.
 
 1.  **Dar permisos de ejecución**:
 
     ``` bash
-    chmod +x stegobmp.sh
+    chmod +x stegobmp
     ```
 
 2.  **Ejecutar el programa**:
 
     ``` bash
-    ./stegobmp.sh [parametros]
+    ./stegobmp [parametros]
     ```
 
 ## 📌 Sintaxis de Uso
@@ -58,13 +58,13 @@ ejecución del `.jar`.
 ### 🔵 Ocultar (Embed)
 
 ``` bash
-./stegobmp.sh -embed -in <archivo_secreto> -p <portador.bmp> -out <salida.bmp> -steg <LSB1|LSB4|LSBI> [opciones_crypto]
+./stegobmp -embed -in <archivo_secreto> -p <portador.bmp> -out <salida.bmp> -steg <LSB1|LSB4|LSBI> [opciones_crypto]
 ```
 
 ### 🔵 Extraer (Extract)
 
 ``` bash
-./stegobmp.sh -extract -p <portador_con_secreto.bmp> -out <archivo_salida> -steg <LSB1|LSB4|LSBI> [opciones_crypto]
+./stegobmp -extract -p <portador_con_secreto.bmp> -out <archivo_salida> -steg <LSB1|LSB4|LSBI> [opciones_crypto]
 ```
 
 ## 🔐 Opciones de Criptografía (Opcional)
@@ -86,19 +86,19 @@ ejecución del `.jar`.
 ### Ejemplo 1 --- Ocultar sin encripción (LSBI)
 
 ``` bash
-./stegobmp.sh -embed -in "mensaje.txt" -p "resources/ejemplo/lado.bmp" -out "output_pruebas/salida_lsbi.bmp" -steg LSBI
+./stegobmp -embed -in "mensaje.txt" -p "resources/ejemplo/lado.bmp" -out "output_pruebas/salida_lsbi.bmp" -steg LSBI
 ```
 
 ### Ejemplo 2 --- Ocultar con encripción (3DES + CBC)
 
 ``` bash
-./stegobmp.sh -embed -in "mensaje.txt" -p "resources/ejemplo/lado.bmp" -out "output_pruebas/salida_3des.bmp" -steg LSBI -a 3des -m cbc -pass "oculto"
+./stegobmp -embed -in "mensaje.txt" -p "resources/ejemplo/lado.bmp" -out "output_pruebas/salida_3des.bmp" -steg LSBI -a 3des -m cbc -pass "oculto"
 ```
 
 ### Ejemplo 3 --- Extraer con encripción
 
 ``` bash
-./stegobmp.sh -extract -p "output_pruebas/salida_3des.bmp" -out "output_pruebas/mensaje_recuperado" -steg LSBI -a 3des -m cbc -pass "oculto"
+./stegobmp -extract -p "output_pruebas/salida_3des.bmp" -out "output_pruebas/mensaje_recuperado" -steg LSBI -a 3des -m cbc -pass "oculto"
 ```
 
 ## 🧪 Pruebas (Testing)

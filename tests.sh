@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-LAUNCHER="./stegobmp.sh"
+LAUNCHER="./stegobmp"
 PORTADOR="resources/ejemplo/lado.bmp"
 SECRETO="secreto_de_prueba.txt"
 OUTPUT_DIR="output_pruebas"
