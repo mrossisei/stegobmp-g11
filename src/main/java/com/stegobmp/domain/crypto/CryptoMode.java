@@ -1,8 +1,5 @@
 package com.stegobmp.domain.crypto;
 
-/**
- * Enum para los modos de encriptación soportados.
- */
 public enum CryptoMode {
     ECB,
     CFB,

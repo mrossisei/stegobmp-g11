@@ -1,8 +1,6 @@
 package com.stegobmp.domain.payload;
 
-import com.stegobmp.domain.crypto.CryptoConfig;
 import com.stegobmp.domain.crypto.CryptoHandler;
-import com.stegobmp.exception.StegoException;
 import com.stegobmp.service.StegoBmpService;
 
 import java.io.ByteArrayOutputStream;
@@ -10,21 +8,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Optional;
 
-/**
- * Responsable de la construcción y deconstrucción del payload.
- * Encapsula la lógica de cómo se empaquetan los datos (tamaño, datos crudos, extensión)
- * antes de la esteganografía y cómo se desempaquetan después.
- * También interactúa con el CryptoHandler si se requiere cifrado.
- */
 public class PayloadHandler {
 
-    private static final int SIZE_BYTES = 4; // Tamaño de un entero en bytes.
+    private static final int SIZE_BYTES = 4;
 
-    // Prepara el payload final que será ocultado: Construye la estructura de datos, la cifra si es necesario, y añade los metadatos de tamaño.
-    // plaintext = [Tamaño real (4 bytes)] || [Datos del archivo] || [Extensión (con '.' y '\0')]
-    // (opcional) cifrado = [Tamaño del cifrado (4 bytes)] || [cifrado(plaintext)]
     public byte[] preparePayload(byte[] secretFileData, String fileName, CryptoHandler cryptoHandler) throws IOException {
         byte[] plaintextPayload = buildPlaintextPayload(secretFileData, fileName);
 
@@ -36,8 +24,6 @@ public class PayloadHandler {
         }
     }
 
-    // | size | data | ext |
-    // | size | ciph(size, data, ext)
     public ExtractedFile parsePayload(byte[] payload, CryptoHandler cryptoHandler) {
         if(cryptoHandler == null){
             return parsePlaintextPayload(payload);
@@ -70,16 +56,12 @@ public class PayloadHandler {
     }
 
 
-
-
-    // --- MÉTODOS PRIVADOS ---
-
     private byte[] buildPlaintextPayload(byte[] data, String fileName) throws IOException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-        stream.write(ByteBuffer.allocate(SIZE_BYTES).putInt(data.length).array()); // Tamaño del archivo (4 bytes, Big Endian).
+        stream.write(ByteBuffer.allocate(SIZE_BYTES).putInt(data.length).array());
 
-        stream.write(data); // TODO: ¿Acá hay que rellenar (padding)? Creo que no, pero por si acaso dejo el comment para revisar
+        stream.write(data);
 
         String extension = getFileExtension(fileName);
         stream.write(extension.getBytes(StandardCharsets.UTF_8));
@@ -101,7 +83,7 @@ public class PayloadHandler {
     private String getFileExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex == -1 || lastDotIndex == fileName.length() - 1) {
-            return "."; // Si no hay extensión o el punto está al final, devolvemos solo el punto.
+            return ".";
         }
         return fileName.substring(lastDotIndex);
     }

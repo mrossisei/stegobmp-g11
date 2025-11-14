@@ -113,20 +113,16 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
         }
     }
 
-
-
     @Override
     public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
-        // 1. Leer metadatos (Bytes 0, 1, 2, 3 - BGRB)
         inversionMap.clear();
         for (int i = 0; i < METADATA_TOTAL_BYTES; i++) {
-            // Usar LSB1 estándar (super.getLSB) para leer los metadatos [cite: 159]
             int lsb = super.getLSB(carrierPixelData[i]);
             inversionMap.put(PATTERNS[i], (lsb & 1) == 1);
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        int carrierIndex = METADATA_TOTAL_BYTES; // Empezar a leer después de los metadatos
+        int carrierIndex = METADATA_TOTAL_BYTES;
 
         byte[] payloadSizeInfo = new byte[4];
         for (int i = 0; i < 4; i++) {
@@ -140,7 +136,7 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
             throw new RuntimeException("Error building payload size info", e);
         }
 
-        int payloadLength = convertPayloadLength(payloadSizeInfo); // Método heredado de Abs
+        int payloadLength = convertPayloadLength(payloadSizeInfo);
 
         for (int i = 0; i < payloadLength; i++) {
             ExtractResult result = extractByteInternal(carrierPixelData, carrierIndex);
@@ -152,14 +148,13 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
             return outputStream.toByteArray();
         }
 
-        // 2c. Extraer Extensión (hasta '\0')
         while (carrierIndex < carrierPixelData.length) {
             ExtractResult result = extractByteInternal(carrierPixelData, carrierIndex);
             byte b = result.extractedByte;
             outputStream.write(b);
             carrierIndex = result.nextIndex;
             if (b == '\0') {
-                break; // Terminó la extensión
+                break;
             }
         }
 
@@ -201,17 +196,13 @@ public class SteganographyStrategyLSBI extends SteganographyStrategyAbs {
         return super.setLSB(originalByte, bitToSet);
     }
 
-    /**
-     * Sobreescrito: Lee el LSB y aplica la inversión SI ES NECESARIO.
-     */
     @Override
     protected int getLSB(byte b) {
-        int lsb = super.getLSB(b); // Lee LSB1
-        int key = b & 6; // Patrón 00, 01, 10, 11
-        // Si el mapa dice que este patrón fue invertido, invertimos el bit leído
+        int lsb = super.getLSB(b);
+        int key = b & 6;
         if (Boolean.TRUE.equals(inversionMap.get(key))) {
-            return lsb == 0 ? 1 : 0; // Invierte el resultado
+            return lsb == 0 ? 1 : 0;
         }
-        return lsb; // Devuelve el LSB tal cual
+        return lsb;
     }
 }

@@ -41,9 +41,8 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
 
     @Override
     public byte[] extract(byte[] carrierPixelData, boolean hasExtension) {
-        byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData); // Los primeros 4 bytes almacenan el largo del payload
+        byte[] payloadSizeInfo = extractPayloadSizeInfo(carrierPixelData);
 
-        // Convertir Big Endian 4 bytes a int
         int payloadLength = convertPayloadLength(payloadSizeInfo);
         int dataStartBitIndex = PAYLOAD_SIZE_INFO_LENGTH * byteRatio;
         byte[] extractedData = extractPayload(carrierPixelData, payloadLength, dataStartBitIndex);
@@ -78,9 +77,6 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
     public int getCapacity(byte[] carrierPixelData) {
         return (int) Math.floor( carrierPixelData.length / (double) byteRatio );
     }
-
-
-
 
     protected byte extractByte(byte[] carrierPixelData, int startBitIndex) {
         byte b = 0;
@@ -139,7 +135,6 @@ public abstract class SteganographyStrategyAbs implements SteganographyStrategy 
         try {
             outputStream.write(payload);
             outputStream.write(extension);
-//            outputStream.write(0); // TODO should i put the null terminator to be consistent?
         } catch (Exception e) {
             throw new RuntimeException("Error building payload with extension", e);
         }

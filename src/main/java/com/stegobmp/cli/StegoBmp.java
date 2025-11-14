@@ -10,14 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-/**
- * Clase principal y punto de entrada de la aplicación.
- * Responsabilidades:
- * 1. Parsear los argumentos de la línea de comandos.
- * 2. Manejar la I/O de archivos (leer los archivos de entrada).
- * 3. Delegar la ejecución a la capa de servicio con los datos ya cargados.
- * 4. Manejar las excepciones y presentar los errores al usuario.
- */
 public class StegoBmp {
 
     public static void main(String[] args) throws IOException, StegoException {
@@ -40,7 +32,7 @@ public class StegoBmp {
         if (cliConfig.cryptoAlgorithm().isPresent()) {
             cryptoConfig = Optional.of(new CryptoConfig(
                     cliConfig.cryptoAlgorithm().get(),
-                    cliConfig.cryptoMode().get(), //TODO: why?
+                    cliConfig.cryptoMode().get(),
                     cliConfig.password().get()
             ));
         }
@@ -48,7 +40,7 @@ public class StegoBmp {
         ServiceConfig serviceConfig = new ServiceConfig(
                 carrierData,
                 secretData,
-                cliConfig.inputFile(), // Pasamos el nombre para la extensión
+                cliConfig.inputFile(),
                 cliConfig.stegAlgorithm(),
                 cryptoConfig
         );
@@ -58,7 +50,7 @@ public class StegoBmp {
         if (cliConfig.operationMode() == OperationMode.EMBED) {
             byte[] outputFileBytes = service.embed();
             writeFileBytes(cliConfig.outputFile(), outputFileBytes);
-        } else { // EXTRACT
+        } else {
             byte[] extractedFileBytes = service.extract();
             String outputFileName = cliConfig.outputFile();
             String extractedExt = service.getLastExtractedFileExtension();

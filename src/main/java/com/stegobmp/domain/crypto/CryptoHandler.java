@@ -90,9 +90,9 @@ public class CryptoHandler {
             Cipher cipher = Cipher.getInstance(transformation);
 
             if (cryptoConfig.cryptoMode() == CryptoMode.ECB) {
-                cipher.init(Cipher.ENCRYPT_MODE, material.key); // [cite: 268]
+                cipher.init(Cipher.ENCRYPT_MODE, material.key);
             } else {
-                cipher.init(Cipher.ENCRYPT_MODE, material.key, material.ivSpec); // [cite: 267]
+                cipher.init(Cipher.ENCRYPT_MODE, material.key, material.ivSpec);
             }
 
             return cipher.doFinal(data);
@@ -111,9 +111,9 @@ public class CryptoHandler {
             Cipher cipher = Cipher.getInstance(transformation);
 
             if (cryptoConfig.cryptoMode() == CryptoMode.ECB) {
-                cipher.init(Cipher.DECRYPT_MODE, material.key); // [cite: 272]
+                cipher.init(Cipher.DECRYPT_MODE, material.key);
             } else {
-                cipher.init(Cipher.DECRYPT_MODE, material.key, material.ivSpec); // [cite: 271]
+                cipher.init(Cipher.DECRYPT_MODE, material.key, material.ivSpec);
             }
 
             return cipher.doFinal(data);

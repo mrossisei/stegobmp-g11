@@ -2,7 +2,6 @@ package com.stegobmp.service;
 
 import com.stegobmp.domain.bmp.BmpHandler;
 import com.stegobmp.domain.bmp.BmpImage;
-import com.stegobmp.domain.crypto.CryptoConfig;
 import com.stegobmp.domain.crypto.CryptoHandler;
 import com.stegobmp.domain.payload.ExtractedFile;
 import com.stegobmp.domain.payload.PayloadHandler;
@@ -11,13 +10,7 @@ import com.stegobmp.domain.steganography.SteganographyStrategy;
 import com.stegobmp.exception.StegoException;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
-/**
- * Orquestador principal de la aplicación.
- * Coordina las llamadas a los componentes del dominio (handlers, strategies, etc.).
- */
 public class StegoBmpService {
 
     private final BmpHandler bmpHandler;
@@ -33,7 +26,6 @@ public class StegoBmpService {
 
     }
 
-    //Proceso de ocultar información.
     public byte[] embed() throws IOException {
         BmpImage carrierImage = bmpHandler.parseBmp(config.carrierData());
 
